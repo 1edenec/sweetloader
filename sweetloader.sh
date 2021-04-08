@@ -9,7 +9,7 @@
 function setPath(){
 	log="$downFolder"/"log.txt"
 	tmpFolder="$downFolder"/"tmp"
-	tmpFile="$tmpFolder"/"swettmp"
+	tmpFile="$tmpFolder"/"$downFolder.tmp"
 	baseFolder="$downFolder"/"base"
 	baseFile="$baseFolder"/"base"
 	mainFile="$downFolder"/"main.html"
@@ -96,8 +96,7 @@ function startStop(){
 
 		[ "$downChapter" == "" ] && ( errorMsg="Range cannot be empty." ; startStop)
 		# check needed to ensure entered data is "22", "22-24", "22 24"
-		check=`echo "$downChapter" | grep -E "([0-9]{1,4}-[0-9]{1,4})|(^[0-9]{1,4}$|^[0-9]{1,4}\ [0-9]{1,4}$)"`
-	if [ "$check" != "" ]
+	if [[ "$downChapter" =~ ([0-9]{1,4}-[0-9]{1,4})|(^[0-9]{1,4}$|^[0-9]{1,4}\ [0-9]{1,4}$) ]]
 	then
 		firstChapter=`echo $downChapter | awk '{gsub ("-"," ",$0); print $1}' `
 		lastChapter=`echo $downChapter | awk '{gsub ("-"," ",$0); print $2}'`
@@ -126,12 +125,12 @@ function reDownload(){
 	objName="$2"
 	for try in {1..10}
 	do
-		curl -Ls "$retryURL"
+		curl -Ls "$retryURL" > "$tmpFile"
 		checkSuccess="$?"
 		if 	[ "$checkSuccess" -eq 0 ]
 		then
 			mv "$tmpFile" "$objName"
-			printf "%s download OK" "$objName" >> "$log"
+			printf "%s download OK\n" "$objName" >> "$log"
 			fileDownloaded="true"
 			break
 		else
@@ -272,14 +271,14 @@ function dataBaseDownload(){
 			do
 				fileDownloaded="false"
 				dateBaseName="`printf ""$baseFolder"/"$downFolder-"%0*d.html" 3 $chapters`"
-				dateBaseUrl="$url""$chapters"".html"
+				dateBaseUrl="$url""$chapters"
 
 				if 	[ -f "$dateBaseName" ]
 				then
 					printf "%s existed OK\n" "$dateBaseName" >> "$log"
 					fileDownloaded="true"
 				else
-					reDownload "$url" "$dateBaseName"
+					reDownload "$dateBaseUrl" "$dateBaseName"
 				fi
 
 				# fileDownload is true or false now.
@@ -324,7 +323,9 @@ function askToProceed(){
 	then
 		manualLoader
 	else
-		exit
+		clear
+		echo "Cheers!"
+		exit 1
 	fi
 }
 
